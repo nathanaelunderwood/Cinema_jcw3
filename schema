@@ -1,0 +1,39 @@
+-=CUSTOMER_TABLE=-
+CUST_ID long custID;
+FIRST_NAME String firstName;
+LAST_NAME String lastName;	
+STREET_NAME String streetName;
+CITY_NAME String cityName;
+POST_CODE String postCode;
+LAST_UPDATED Date lastUpdated;
+
+-=SEATS_TABLE=-
+SEAT_ID long seatID;
+SEAT_NUMBER String seatNum;
+THEATRE_ID long theatreID;	
+SEAT_TYPE String seatType;
+LAST_UPDATED Date lastUpdated;
+
+-=THEATRE_TABLE=-
+THEATRE_ID long theatreID;
+THEATRE_NAME String theatreName;
+LAST_UPDATED Date lastUpdated;
+
+-=BOOKINGS_TABLE=-
+BOOK_ID long bookID;
+SEAT_ID long seatID;
+EVENT_ID long eventID;
+BOOK_ID long bookID;
+CUST_ID long custID;
+LAST_UPDATED Date lastUpdated;
+
+-=EVENTS_TABLE=-
+EVENT_ID long eventID;
+EVENT_DESCR String eventDescription;
+SHORT_DESCR String shortDescription;
+EVENT_DATE Date eventDate;
+LAST_UPDATED Date lastUpdated;
+
+
+$ javac *.java
+$ java Controller
