@@ -1,0 +1,124 @@
+<project name="Cinema" default="run" basedir=".">
+  <description>
+    Cinema app
+  </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="lib" location="lib"/>
+  <property name="build" location="build"/>
+
+  <!-- database connection properties -->
+  <property name="dburl" value="jdbc:mysql://127.0.0.1/cinema" />
+  <property name="dbdriver" 
+            value="com.mysql.jdbc.Driver"/>
+  <property name="dbuser" value="cinema"/>
+  <property name="dbpass" value="cinema_pass"/>
+
+  <!-- Classpath declaration -->
+  <path id="project.classpath">
+    <fileset dir="${lib}/apache-openjpa">
+      <include name="openjpa-*.jar"/>
+    </fileset>
+    <fileset dir="${lib}/mysql-connector-java">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="javaagent">
+    <fileset dir="${lib}/apache-openjpa">
+      <include name="openjpa-*.jar"/>
+      <exclude name="openjpa-all-*.jar"/>
+    </fileset>
+  </path>
+  <pathconvert property="javaagent" refid="javaagent"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="compile" depends="init"
+          description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}"
+           destdir="${build}"
+           classpathref="project.classpath"/>
+  </target>
+
+  <target name="run" depends="compile, enhance"
+          description="Build and run Cinema">
+    <java fork="true"
+          classname="Controller"
+          classpathref="project.classpath">
+
+      <sysproperty key="openjpa.ConnectionDriverName"
+                   value="${dbdriver}"/>
+      <sysproperty key="openjpa.ConnectionURL" value="${dburl}"/>
+      <sysproperty key="openjpa.ConnectionUserName" value="${dbuser}"/>
+      <sysproperty key="openjpa.ConnectionPassword" value="${dbpass}"/>
+
+      <!--
+          Tell OpenJPA to automatically create tables in the database
+          for entities. Note that this should be disabled when
+          running against a production database, since you probably
+          don't want to be altering the schema at runtime.
+      -->
+      <sysproperty key="openjpa.jdbc.SynchronizeMappings"
+                   value="buildSchema"/>
+
+      <!--
+          Output all the SQL for educational purposes, but set the
+          general logging level to only show warnings.
+      -->
+      <sysproperty key="openjpa.Log"
+                   value="DefaultLevel=WARN,SQL=TRACE"/>
+      
+      <classpath path="${build}"/>
+    </java>
+  </target>
+
+
+  <path id="jpa.enhancement.classpath">
+    <pathelement location="build"/>
+
+    <!-- lib contains all of the jars that came with the OpenJPA binary download -->
+    <fileset dir="${lib}/apache-openjpa">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+
+  <!-- Need to enhance OpenJPA classes. See http://people.apache.org/~mprudhom/openjpa/site/openjpa-project/manual/ref_guide_pc_enhance.html -->
+  <target name="enhance" depends="compile">
+    <!-- This is a bit of a hack, but I needed to copy the persistence.xml file from my src dir
+         to the build dir when we run enhancement -->
+    <copy includeemptydirs="false" todir="build">
+      <fileset dir="." includes="*.class"/>
+    </copy>
+    <copy todir="build">
+      <fileset dir=".">
+        <include name="META-INF/**" />
+      </fileset>
+    </copy>
+
+
+    <!-- define the openjpac task -->
+    <taskdef name="openjpac" classname="org.apache.openjpa.ant.PCEnhancerTask">
+      <classpath refid="jpa.enhancement.classpath"/>
+    </taskdef>
+    
+    <!-- invoke enhancer the enhancer -->
+    <openjpac>
+      <classpath refid="jpa.enhancement.classpath"/>
+    </openjpac>
+    <echo message="Enhancing complete."/>
+  </target>  
+
+  <target name="clean"
+          description="clean up" >
+    <delete dir="${build}"/>
+  </target>
+  
+</project>
